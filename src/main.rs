@@ -6,7 +6,7 @@ use axum::{
     http::Response,
     response::{Html, IntoResponse},
     routing::get,
-    Json, Router, Server,
+    Router, Server,
 };
 use std::sync::{Arc, Mutex};
 use sysinfo::{CpuExt, System, SystemExt};
@@ -19,7 +19,6 @@ async fn main() {
         .route("/", get(root_get))
         .route("/index.mjs", get(indexmjs_get))
         .route("/index.css", get(indexcss_get))
-        .route("/api/cpus", get(cpus_get))
         .route("/realtime/cpus", get(realtime_cpus_get))
         .with_state(app_state.clone());
 
@@ -75,12 +74,6 @@ async fn indexcss_get() -> impl IntoResponse {
 }
 
 #[axum::debug_handler]
-async fn cpus_get(State(state): State<AppState>) -> impl IntoResponse {
-    let v = state.cpus.lock().unwrap().clone();
-    Json(v)
-}
-
-#[axum::debug_handler]
 async fn realtime_cpus_get(
     ws: WebSocketUpgrade,
     State(state): State<AppState>,
@@ -94,5 +87,4 @@ async fn realtime_cpus_stream(app_state: AppState, mut ws: WebSocket) {
         ws.send(Message::Text(payload)).await.unwrap();
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
-    
 }
